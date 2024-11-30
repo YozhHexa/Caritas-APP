@@ -64,7 +64,7 @@ def get_categories(item):
     if(item.parent.name in CATEGORIES):
         categories = [item.parent.name]
     # print(item.parent.name)
-    with open(item, "r") as file:
+    with open(item, "r", encoding="utf-8") as file:
         for i, line in enumerate(file, 1):
             if i == 7:
                 if line.startswith("> Category: "):
@@ -107,7 +107,7 @@ def get_audio_dir(path, config):
             # print(categories)
             if not categories:
                 continue
-            tar_filename = config["AUDIO_TARGET_DIR"] + categories[0] + "/" + item.name.replace(".md", ".wav")
+            tar_filename = config["AUDIO_TARGET_DIR"] + categories[0] + "\\" + item.name.replace(".md", ".wav")
             if os.path.exists(tar_filename):
                 # print(tar_filename + " exists, skip")
                 continue
@@ -135,18 +135,24 @@ def convert_to_mp3(config):
                 continue
             target = (
                 config["MP3_TARGET_DIR"]
-                + path.replace(config["AUDIO_TARGET_DIR"], "").replace("/应用科学", "").replace("/自然科学", "")
-                + "/"
+                + path.replace(config["AUDIO_TARGET_DIR"], "").replace("\\应用科学", "").replace("\\自然科学", "")
+                + '\\'
                 + file_name.replace(".wav", ".mp3")
             )
             for s, t in CATEGORIES_MP3.items():
                 target = target.replace(s, t)
+
+                        # 确保目标文件夹存在
+            target_dir = os.path.dirname(target)
+            if not os.path.exists(target_dir):
+                os.makedirs(target_dir)
+            print(target)
             if os.path.exists(target):
                 # print(target + " exists, skip")
                 continue
             # print(target)
             command = (
-                'ffmpeg -i "' + path + "/" + file_name + '" -codec:v copy -codec:a libmp3lame -q:a 0 "' + target + '"'
+                'ffmpeg -i "' + path + "\\" + file_name + '" -codec:v copy -codec:a libmp3lame -q:a 0 "' + target + '"'
             )
             # print(command)
             os.system(command)
@@ -162,10 +168,10 @@ def upload_to_cos(config):
             if ".mp3" not in file_name or file_name in IGNORE_FILES:
                 continue
             ntime = time.time()
-            mtime = os.path.getmtime(path + "/" + file_name)
+            mtime = os.path.getmtime(path + "\\" + file_name)
             rst = ntime - mtime
             if rst < 60 * 60 * 24:
-                mp3_filename = path + "/" + file_name
+                mp3_filename = path + "\\" + file_name
                 cos_filename = mp3_filename.replace(config["MP3_TARGET_DIR"], COS_TARGET_DIR)
                 print(cos_filename)
 
